@@ -22,7 +22,7 @@ button.primary{background:var(--blue);border-color:var(--blue);color:white}butto
 button.ss-tab.active{background:var(--ss-bg);border-color:var(--ss-line);color:var(--ss-text)}
 button.end-ss{background:#9a3412;border-color:#9a3412;color:white;font-weight:700}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #8ec5f3;outline-offset:2px}
-.series-tabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;flex:1;min-width:300px}
+.series-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:6px;flex:1;min-width:300px}
 .series-tabs button{font-weight:700;padding:12px 4px}
 .view-mode-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .view-mode-bar span{font-size:12px;color:var(--muted);font-weight:700;margin-right:2px}
@@ -116,12 +116,12 @@ footer{max-width:1180px;margin:0 auto;padding:0 14px 24px;color:var(--muted);fon
     <button type="button" id="newSession">新しい記録</button>
   </div>
   <div class="ss-banner hidden" id="ssBanner">
-    <span>SS（試射）モード中：試射の記録は本射（S1〜S6）集計には含まれません</span>
+    <span id="ssBannerText">試射モード中：10発記録すると次の試射へ進みます</span>
     <button type="button" class="end-ss" id="endSsBtn">終わり</button>
   </div>
   <div class="layout">
     <section class="card">
-      <div class="current"><h2 id="targetTitle">SS（試射） · 着弾位置</h2><span class="pill" id="shotProgress">0 / 10 発</span></div>
+      <div class="current"><h2 id="targetTitle">SS1 · 着弾位置</h2><span class="pill" id="shotProgress">0 / 10 発</span></div>
       <div class="view-mode-bar" role="group" aria-label="着弾表示の切り替え">
         <span>着弾表示：</span>
         <button type="button" class="active" data-viewmode="current">選択中</button>
@@ -155,7 +155,7 @@ footer{max-width:1180px;margin:0 auto;padding:0 14px 24px;color:var(--muted);fon
     </section>
     <section class="card">
       <h2>得点入力</h2>
-      <div class="current"><span id="shotLabel">SS（試射） · 1発目</span><span class="pill" id="modeBadge">試射（本射S1前）</span></div>
+      <div class="current"><span id="shotLabel">SS1 · 1発目</span><span class="pill" id="modeBadge">試射（10発ごとに増加）</span></div>
       <div class="score-input">
         <div><label for="score">得点（手入力）</label><input id="score" type="number" min="0" max="10.9" step="0.1" placeholder="例 10.2" inputmode="decimal"></div>
         <button type="button" class="primary" id="saveShot">記録する</button>
@@ -270,10 +270,11 @@ const DEFAULT_PRESETS=[
  '呼吸を整えて、引き金をまっすぐ引く',
  '姿勢と頬付けをリセット'
 ];
+const makeEmptySlots=()=>Array.from({length:10},()=>null);
 const empty=(name='')=>({
  name,
- series:Array.from({length:6},()=>Array.from({length:10},()=>null)),
- ss:Array.from({length:10},()=>null),
+ series:Array.from({length:6},makeEmptySlots),
+ ssList:[makeEmptySlots()],
  displayText:'',
  presets:[...DEFAULT_PRESETS],
  fsBgColor:'#0f1d2d',
@@ -306,15 +307,24 @@ function normalizeShot(item){
  };
 }
 
+function normalizeSlots(arr){
+ return Array.isArray(arr)?Array.from({length:10},(_,i)=>normalizeShot(arr[i])):makeEmptySlots();
+}
+
 function normalizeData(raw){
  const base=empty('');
  if(!raw||typeof raw!=='object')return base;
  base.name=typeof raw.name==='string'?raw.name.slice(0,40):'';
  if(Array.isArray(raw.series)&&raw.series.length===6){
-  base.series=raw.series.map(s=>Array.isArray(s)?Array.from({length:10},(_,i)=>normalizeShot(s[i])):Array.from({length:10},()=>null));
+  base.series=raw.series.map(normalizeSlots);
  }
- if(Array.isArray(raw.ss)){
-  base.ss=Array.from({length:10},(_,i)=>normalizeShot(raw.ss[i]));
+ if(Array.isArray(raw.ssList)&&raw.ssList.length>0){
+  base.ssList=raw.ssList.map(normalizeSlots);
+ }else{
+  const list=[];
+  if(Array.isArray(raw.ss)&&raw.ss.some(Boolean))list.push(normalizeSlots(raw.ss));
+  if(Array.isArray(raw.ss2)&&raw.ss2.some(Boolean))list.push(normalizeSlots(raw.ss2));
+  base.ssList=list.length>0?list:[makeEmptySlots()];
  }
  if(typeof raw.displayText==='string'){
   base.displayText=raw.displayText;
@@ -347,10 +357,11 @@ function unpackShot(v){
 }
 
 function packForCookie(d){
+ const list=Array.isArray(d.ssList)&&d.ssList.length>0?d.ssList:[makeEmptySlots()];
  return {
   n:d.name||'',
   s:d.series.map(arr=>arr.map(packShot)),
-  ss:(d.ss||[]).map(packShot),
+  l:list.map(arr=>arr.map(packShot)),
   dt:(d.displayText||'').slice(0,200),
   pr:(d.presets||[]).slice(0,10).map(p=>p.slice(0,80)),
   bg:d.fsBgColor||'#0f1d2d',
@@ -364,8 +375,10 @@ function unpackFromCookie(p){
  if(!p||typeof p!=='object'||!Array.isArray(p.s)||p.s.length!==6)return null;
  return normalizeData({
   name:typeof p.n==='string'?p.n:'',
-  series:p.s.map(arr=>Array.isArray(arr)?arr.map(unpackShot):Array.from({length:10},()=>null)),
-  ss:Array.isArray(p.ss)?p.ss.map(unpackShot):Array.from({length:10},()=>null),
+  series:p.s.map(arr=>Array.isArray(arr)?arr.map(unpackShot):makeEmptySlots()),
+  ssList:Array.isArray(p.l)?p.l.map(arr=>Array.isArray(arr)?arr.map(unpackShot):makeEmptySlots()):undefined,
+  ss:Array.isArray(p.ss)?p.ss.map(unpackShot):undefined,
+  ss2:Array.isArray(p.ss2)?p.ss2.map(unpackShot):undefined,
   displayText:typeof p.dt==='string'?p.dt:'',
   presets:Array.isArray(p.pr)?p.pr:DEFAULT_PRESETS,
   fsBgColor:p.bg,
@@ -396,8 +409,9 @@ function writeCookie(name,value,maxAgeSec=2592000){
 }
 
 let data=load();
+if(!Array.isArray(data.ssList)||data.ssList.length===0)data.ssList=[makeEmptySlots()];
 const hasMainShots=data.series.some(arr=>arr.some(Boolean));
-let activeSeries=0,isSsMode=!hasMainShots,activeShot=0,pendingPoint=null,targetViewMode='current',statusNotice='';
+let activeSeries=0,activeSsIndex=0,isSsMode=!hasMainShots,activeShot=0,pendingPoint=null,targetViewMode='current',statusNotice='';
 let shotCounter=computeMaxSeq(data);
 let preparedShareFile=null,preparedShareBlob=null,preparedShareUrl='',preparedFileName='br-score-summary.png';
 
@@ -406,8 +420,8 @@ function computeMaxSeq(d){
  if(d&&Array.isArray(d.series)){
   d.series.forEach(arr=>arr.forEach(x=>{if(x&&Number.isFinite(x.seq)&&x.seq>maxSeq)maxSeq=x.seq}));
  }
- if(d&&Array.isArray(d.ss)){
-  d.ss.forEach(x=>{if(x&&Number.isFinite(x.seq)&&x.seq>maxSeq)maxSeq=x.seq});
+ if(d&&Array.isArray(d.ssList)){
+  d.ssList.forEach(arr=>arr.forEach(x=>{if(x&&Number.isFinite(x.seq)&&x.seq>maxSeq)maxSeq=x.seq}));
  }
  return maxSeq;
 }
@@ -451,7 +465,11 @@ function persist(){
 }
 
 function getActiveSlots(){
- return isSsMode?data.ss:data.series[activeSeries];
+ if(isSsMode){
+  if(activeSsIndex<0||activeSsIndex>=data.ssList.length)activeSsIndex=0;
+  return data.ssList[activeSsIndex];
+ }
+ return data.series[activeSeries];
 }
 
 function current(){
@@ -497,9 +515,10 @@ function firstEmptyInSlots(slots){
  return i<0?0:i;
 }
 
-function enterSsMode(){
+function enterSsMode(idx=0){
  isSsMode=true;
- activeShot=firstEmptyInSlots(data.ss);
+ activeSsIndex=Math.max(0,Math.min(data.ssList.length-1,idx));
+ activeShot=firstEmptyInSlots(data.ssList[activeSsIndex]);
  pendingPoint=null;
  statusNotice='';
  render();
@@ -516,13 +535,15 @@ function exitSsMode(){
 
 function collectAllPoints(){
  const list=[];
- (data.ss||[]).forEach((r,idx)=>{
-  if(!r||!Number.isFinite(r.x)||!Number.isFinite(r.y))return;
-  list.push({
-   ...r,
-   label:`SS-${idx+1}`,
-   shortLabel:`T${idx+1}`,
-   isSs:true
+ (data.ssList||[]).forEach((arr,sIdx)=>{
+  (arr||[]).forEach((r,idx)=>{
+   if(!r||!Number.isFinite(r.x)||!Number.isFinite(r.y))return;
+   list.push({
+    ...r,
+    label:`SS${sIdx+1}-${idx+1}`,
+    shortLabel:`T${sIdx+1}-${idx+1}`,
+    isSs:true
+   });
   });
  });
  data.series.forEach((arr,sIdx)=>{
@@ -676,11 +697,11 @@ function render(){
  applyViewerStyle();
  renderPresets();
 
- const ssHtml=`<button type="button" class="ss-tab ${isSsMode?'active':''}" id="ssTabBtn">SS</button>`;
+ const ssTabsHtml=data.ssList.map((_,i)=>`<button type="button" class="ss-tab ${(isSsMode&&i===activeSsIndex)?'active':''}" data-ssidx="${i}">SS${i+1}</button>`).join('');
  const seriesHtml=Array.from({length:6},(_,i)=>`<button type="button" class="${(!isSsMode&&i===activeSeries)?'active':''}" data-series="${i}">S${i+1}</button>`).join('');
- document.getElementById('seriesTabs').innerHTML=ssHtml+seriesHtml;
+ document.getElementById('seriesTabs').innerHTML=ssTabsHtml+seriesHtml;
 
- document.getElementById('ssTabBtn').onclick=enterSsMode;
+ document.querySelectorAll('[data-ssidx]').forEach(b=>b.onclick=()=>enterSsMode(+b.dataset.ssidx));
  document.querySelectorAll('[data-series]').forEach(b=>b.onclick=()=>{
   isSsMode=false;
   activeSeries=+b.dataset.series;
@@ -692,13 +713,15 @@ function render(){
 
  document.getElementById('ssBanner').classList.toggle('hidden',!isSsMode);
  document.getElementById('endSsInlineBtn').classList.toggle('hidden',!isSsMode);
+ document.getElementById('ssBannerText').textContent=
+  `SS${activeSsIndex+1}（試射）モード中：10発記録すると自動で SS${activeSsIndex+2} へ進みます`;
 
  const slots=getActiveSlots();
- const modePrefix=isSsMode?'SS（試射）':`S${activeSeries+1}`;
+ const modePrefix=isSsMode?`SS${activeSsIndex+1}`:`S${activeSeries+1}`;
  document.getElementById('targetTitle').textContent=`${modePrefix} · 着弾位置`;
  document.getElementById('shotProgress').textContent=`${count(slots)} / 10 発`;
  document.getElementById('shotLabel').textContent=`${modePrefix} · ${activeShot+1}発目`;
- document.getElementById('modeBadge').textContent=isSsMode?'試射（本射S1前）':'全6シリーズ・60発';
+ document.getElementById('modeBadge').textContent=isSsMode?`試射（10発でSS${activeSsIndex+2}へ）`:'全6シリーズ・60発';
  document.getElementById('statTotalLabel').textContent=isSsMode?'試射合計':'シリーズ合計';
 
  document.querySelectorAll('[data-viewmode]').forEach(b=>{
@@ -748,9 +771,10 @@ function renderMarkers(){
   const recent=collectRecent5Points();
   recent.forEach((r,idx)=>drawMarkerOnSvg(g,r,r.label,idx===recent.length-1,r.isSs));
  }else{
+  const prefix=isSsMode?`T${activeSsIndex+1}-`:'';
   getActiveSlots().forEach((r,i)=>{
    if(!r||!Number.isFinite(r.x)||!Number.isFinite(r.y))return;
-   drawMarkerOnSvg(g,r,isSsMode?`T${i+1}`:String(i+1),i===activeShot,isSsMode);
+   drawMarkerOnSvg(g,r,`${prefix}${i+1}`,i===activeShot,isSsMode);
   });
  }
  if(pendingPoint){
@@ -762,18 +786,16 @@ function renderMarkers(){
  }
 }
 
-function renderSummary(){
- const ssArr=data.ss||[];
- const ssGroups={low:0,mid:0,high:0};
- ssArr.forEach(x=>{if(x){if(x.score>=10.5)ssGroups.high++;else if(x.score>=10)ssGroups.mid++;else ssGroups.low++}});
- const ssRow=`<tr><td><b>SS</b></td><td>${count(ssArr)}/10</td><td>${fmt(total(ssArr))}</td><td>${count(ssArr)?fmt(total(ssArr)/count(ssArr)):'—'}</td><td>9点台以下 ${ssGroups.low} · 10.0〜10.4 ${ssGroups.mid} · 10.5以上 ${ssGroups.high}</td></tr>`;
+function formatSummaryRow(label,arr){
+ const g={low:0,mid:0,high:0};
+ arr.forEach(x=>{if(x){if(x.score>=10.5)g.high++;else if(x.score>=10)g.mid++;else g.low++}});
+ return `<tr><td><b>${label}</b></td><td>${count(arr)}/10</td><td>${fmt(total(arr))}</td><td>${count(arr)?fmt(total(arr)/count(arr)):'—'}</td><td>9点台以下 ${g.low} · 10.0〜10.4 ${g.mid} · 10.5以上 ${g.high}</td></tr>`;
+}
 
- const rows=data.series.map((arr,i)=>{
-  const groups={low:0,mid:0,high:0};
-  arr.forEach(x=>{if(x){if(x.score>=10.5)groups.high++;else if(x.score>=10)groups.mid++;else groups.low++}});
-  return `<tr><td><b>S${i+1}</b></td><td>${count(arr)}/10</td><td>${fmt(total(arr))}</td><td>${count(arr)?fmt(total(arr)/count(arr)):'—'}</td><td>9点台以下 ${groups.low} · 10.0〜10.4 ${groups.mid} · 10.5以上 ${groups.high}</td></tr>`;
- });
- document.getElementById('summaryRows').innerHTML=ssRow+rows.join('');
+function renderSummary(){
+ const ssRows=(data.ssList||[]).map((arr,i)=>formatSummaryRow(`SS${i+1}`,arr));
+ const rows=data.series.map((arr,i)=>formatSummaryRow(`S${i+1}`,arr));
+ document.getElementById('summaryRows').innerHTML=ssRows.join('')+rows.join('');
 }
 
 function clientToSvgPoint(svg,clientX,clientY){
@@ -959,7 +981,18 @@ document.getElementById('saveShot').addEventListener('click',()=>{
  persist();
  pendingPoint=null;
  statusNotice='';
- if(!isSsMode&&activeShot===9){
+ if(isSsMode){
+  if(activeShot===9){
+   if(activeSsIndex===data.ssList.length-1){
+    data.ssList.push(makeEmptySlots());
+   }
+   activeSsIndex+=1;
+   activeShot=firstEmptyInSlots(data.ssList[activeSsIndex]);
+   statusNotice=`SS${activeSsIndex+1} へ自動で進みました`;
+  }else{
+   activeShot++;
+  }
+ }else if(activeShot===9){
   if(activeSeries<5){
    const nextSeries=activeSeries+1;
    activeSeries=nextSeries;
@@ -1170,13 +1203,13 @@ document.getElementById('newSession').addEventListener('click',()=>{
   data.fsTextColor=keepFg;
   data.fsFontSize=keepFz;
   data.fsAlign=keepAl;
-  shotCounter=0;activeSeries=0;isSsMode=true;activeShot=0;pendingPoint=null;statusNotice='';persist();render();
+  shotCounter=0;activeSeries=0;activeSsIndex=0;isSsMode=true;activeShot=0;pendingPoint=null;statusNotice='';persist();render();
  }
 });
 document.getElementById('exportData').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='br-score-backup.json';a.click();URL.revokeObjectURL(a.href)});
 document.getElementById('importButton').addEventListener('click',()=>document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.series)||x.series.length!==6||x.series.some(a=>!Array.isArray(a)||a.length!==10))throw Error();data=normalizeData(x);shotCounter=Math.max(shotCounter,computeMaxSeq(data));persist();render();alert('バックアップを復元しました。')}catch{alert('このファイルはBR Score Managerのバックアップではありません。')}e.target.value=''});
-document.getElementById('resetAll').addEventListener('click',()=>{if(confirm('全シリーズの記録を完全に削除しますか？')){data=empty('');shotCounter=0;isSsMode=true;activeSeries=0;activeShot=0;statusNotice='';persist();render()}});
+document.getElementById('resetAll').addEventListener('click',()=>{if(confirm('全シリーズの記録を完全に削除しますか？')){data=empty('');shotCounter=0;isSsMode=true;activeSsIndex=0;activeSeries=0;activeShot=0;statusNotice='';persist();render()}});
 document.getElementById('recordDate').value=todayIso();
 render();
 </script>
