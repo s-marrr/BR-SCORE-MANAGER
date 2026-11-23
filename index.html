@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14263a">
+<title>BR Score Manager</title>
+<style>
+:root{color-scheme:light;--navy:#14263a;--blue:#245b85;--bg:#f3f6f9;--card:#fff;--line:#dce3ea;--muted:#64748b;--accent:#1976d2;--info-bg:#e8f2fc;--info-line:#b7d4f2;--info-text:#12466f;--ss-bg:#fff3e0;--ss-line:#f3c683;--ss-text:#8a4b08}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#172536;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--navy);color:white;padding:18px max(16px,env(safe-area-inset-left));}
+.header-inner{max-width:1180px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:20px;margin:0;letter-spacing:.06em}header small{color:#c7d6e5}
+main{max-width:1180px;margin:18px auto;padding:0 14px 36px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.record-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:14px}
+.record-meta label{font-size:12px;color:var(--muted);font-weight:700}
+.record-meta input[type="text"]{flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#172536}
+.record-meta input[type="date"]{padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#172536}
+button,select,input{font:inherit}button{border:1px solid var(--line);background:white;border-radius:10px;padding:10px 13px;cursor:pointer;color:#172536;-webkit-tap-highlight-color:transparent}
+button.primary{background:var(--blue);border-color:var(--blue);color:white}button.active{background:#e5f1fb;border-color:#76a9d2;color:#12466f}
+button.ss-tab.active{background:var(--ss-bg);border-color:var(--ss-line);color:var(--ss-text)}
+button.end-ss{background:#9a3412;border-color:#9a3412;color:white;font-weight:700}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #8ec5f3;outline-offset:2px}
+.series-tabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;flex:1;min-width:300px}
+.series-tabs button{font-weight:700;padding:12px 4px}
+.view-mode-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.view-mode-bar span{font-size:12px;color:var(--muted);font-weight:700;margin-right:2px}
+.view-mode-bar button{padding:6px 10px;font-size:12px;border-radius:8px}
+.ss-banner{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ss-bg);border:1px solid var(--ss-line);color:var(--ss-text);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:13px;font-weight:700}
+.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(310px,.85fr);gap:14px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 2px 8px #162b3d0a}
+.card h2{font-size:17px;margin:0 0 12px}
+.target-wrap{max-width:560px;margin:auto;touch-action:none}
+#target{display:block;width:100%;height:auto;border-radius:12px;background:#fbfcfd;border:1px solid #e3e8ee;touch-action:none;cursor:crosshair;-webkit-touch-callout:none;user-select:none}
+.target-guide{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--info-text);background:var(--info-bg);border:1px solid var(--info-line);border-radius:10px;padding:10px 12px;margin-top:10px}
+.target-guide button{padding:6px 10px;font-size:12px;background:white;border-color:#9fc4e8;color:var(--info-text)}
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:12px;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
+.current{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.pill{background:#edf3f8;color:#34536e;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:700}
+.score-input{display:flex;gap:8px;align-items:end;margin:12px 0}
+.score-input label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.score-input input{width:130px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:20px}
+.shots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.shot{padding:9px 5px;text-align:center;min-height:65px}
+.shot b{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.shot span{font-size:16px;font-weight:700}
+.shot.selected{border:2px solid var(--accent);background:#edf6ff}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stat{background:#f4f7fa;border-radius:10px;padding:10px}
+.stat small{display:block;color:var(--muted);font-size:11px}.stat strong{font-size:20px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.summary{margin-top:14px}
+.share-box{margin-top:14px;padding:12px;border:1px solid var(--info-line);background:#f7fbff;border-radius:12px}
+.share-box-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.share-box-head strong{font-size:14px;color:var(--info-text)}
+.share-preview-img{display:block;width:100%;max-width:680px;height:auto;border-radius:10px;border:1px solid var(--line);background:#fff;margin:0 auto}
+.share-hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:9px 7px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted);font-size:12px}
+.color-key{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0}
+footer{max-width:1180px;margin:0 auto;padding:0 14px 24px;color:var(--muted);font-size:12px}
+.hidden{display:none!important}
+@media(max-width:780px){.layout{grid-template-columns:1fr}.card{padding:13px}.target-wrap{max-width:480px}.header-inner{align-items:flex-start;flex-direction:column}}
+@media(max-width:380px){.shots{gap:5px}.shot{padding:8px 2px}.shot span{font-size:14px}.stats{gap:5px}.stat strong{font-size:17px}}
+</style>
+</head>
+<body>
+<header><div class="header-inner"><div><h1>BR SCORE MANAGER</h1><small>BEAM RIFLE · PERSONAL SCORE & SHOT LOG</small></div><small id="saveStatus">Cookie / 端末保存</small></div></header>
+<main>
+  <div class="record-meta">
+    <label for="recordName">記録名</label>
+    <input id="recordName" type="text" maxlength="40" placeholder="例：2026/11/23 練習 / S1-S6">
+    <input id="recordDate" type="date" aria-label="日付を選択して記録名に設定">
+    <button type="button" id="setTodayBtn">今日</button>
+    <button type="button" id="saveName">名前を保存</button>
+  </div>
+  <div class="toolbar">
+    <div class="series-tabs" id="seriesTabs" aria-label="試射・シリーズ選択"></div>
+    <button type="button" id="newSession">新しい記録</button>
+  </div>
+  <div class="ss-banner hidden" id="ssBanner">
+    <span>SS（試射）モード中：試射の記録は本射（S1〜S6）集計には含まれません</span>
+    <button type="button" class="end-ss" id="endSsBtn">終わり</button>
+  </div>
+  <div class="layout">
+    <section class="card">
+      <div class="current"><h2 id="targetTitle">SS（試射） · 着弾位置</h2><span class="pill" id="shotProgress">0 / 10 発</span></div>
+      <div class="view-mode-bar" role="group" aria-label="着弾表示の切り替え">
+        <span>着弾表示：</span>
+        <button type="button" class="active" data-viewmode="current">選択中</button>
+        <button type="button" data-viewmode="recent5">直近5発</button>
+        <button type="button" data-viewmode="all">全ての着弾</button>
+      </div>
+      <div class="target-wrap">
+        <svg id="target" viewBox="0 0 400 400" role="img" aria-label="着弾位置をタップして記録する標的図">
+          <rect x="0" y="0" width="400" height="400" fill="#fbfcfd"/>
+          <g id="rings" fill="none" stroke="#526273" stroke-width="1.4">
+            <circle cx="200" cy="200" r="170"/><circle cx="200" cy="200" r="153"/>
+            <circle cx="200" cy="200" r="136"/><circle cx="200" cy="200" r="119"/>
+            <circle cx="200" cy="200" r="102"/><circle cx="200" cy="200" r="85"/>
+            <circle cx="200" cy="200" r="68"/><circle cx="200" cy="200" r="51"/>
+            <circle cx="200" cy="200" r="34"/><circle cx="200" cy="200" r="17"/>
+          </g>
+          <path d="M200 20V380M20 200H380" stroke="#9aa6b2" stroke-dasharray="4 5" stroke-width="1"/>
+          <circle cx="200" cy="200" r="3" fill="#172536"/>
+          <g id="markers"></g>
+        </svg>
+      </div>
+      <div class="target-guide" id="targetGuide" aria-live="polite">
+        <span id="coordStatus">的をタップして着弾位置を指定してください（未選択）</span>
+        <button type="button" id="deselectPoint">選択解除</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#1677c8"></i>9点台以下</span>
+        <span><i class="dot" style="background:#e29a24"></i>10点台</span>
+        <span><i class="dot" style="background:#e5484d"></i>10.5点以上</span>
+      </div>
+    </section>
+    <section class="card">
+      <h2>得点入力</h2>
+      <div class="current"><span id="shotLabel">SS（試射） · 1発目</span><span class="pill" id="modeBadge">試射（本射S1前）</span></div>
+      <div class="score-input">
+        <div><label for="score">得点（手入力）</label><input id="score" type="number" min="0" max="10.9" step="0.1" placeholder="例 10.2" inputmode="decimal"></div>
+        <button type="button" class="primary" id="saveShot">記録する</button>
+      </div>
+      <p style="font-size:12px;color:#64748b;margin:0 0 12px">①標的図をタップして位置を指定 → ②得点を入力 → ③「記録する」。位置・得点は後から選択して修正できます。</p>
+      <div class="shots" id="shotButtons"></div>
+      <div class="actions">
+        <button type="button" id="prevShot">前の発</button><button type="button" id="nextShot">次の発</button>
+        <button type="button" id="clearShot">この発を消去</button>
+        <button type="button" class="end-ss hidden" id="endSsInlineBtn">終わり</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><small id="statTotalLabel">試射合計</small><strong id="seriesTotal">0.0</strong></div>
+        <div class="stat"><small>入力済み</small><strong id="seriesCount">0/10</strong></div>
+        <div class="stat"><small>平均点</small><strong id="seriesAverage">—</strong></div>
+      </div>
+    </section>
+  </div>
+  <section class="card summary">
+    <h2>シリーズ別・着弾地点と得点の集計</h2>
+    <div class="color-key"><span><i class="dot" style="background:#1677c8"></i>9点台以下</span><span><i class="dot" style="background:#e29a24"></i>10.0〜10.4</span><span><i class="dot" style="background:#e5484d"></i>10.5以上</span></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>シリーズ</th><th>発数</th><th>合計</th><th>平均</th><th>点数別の着弾</th></tr></thead><tbody id="summaryRows"></tbody></table></div>
+    <div class="actions">
+      <button type="button" class="primary" id="openSharePreview">まとめ画像を表示</button>
+      <button type="button" id="exportData">バックアップを書き出す</button>
+      <button type="button" id="importButton">バックアップを復元</button>
+      <input class="hidden" type="file" id="importFile" accept="application/json">
+      <button type="button" id="resetAll">全記録を削除</button>
+    </div>
+    <div class="share-box hidden" id="shareBox">
+      <div class="share-box-head">
+        <strong>成績まとめ画像プレビュー（全着弾表示）</strong>
+        <button type="button" id="closeSharePreview">閉じる</button>
+      </div>
+      <img id="sharePreviewImg" class="share-preview-img" alt="成績まとめ画像">
+      <div class="actions">
+        <button type="button" class="primary" id="shareBtn">共有</button>
+        <button type="button" id="downloadImageBtn">画像を保存</button>
+      </div>
+      <p class="share-hint" id="shareHintText">「共有」を押すと長押しなしで共有メニューを開きます。まとめ画像には全ての着弾が描画されます。</p>
+    </div>
+  </section>
+</main>
+<footer>記録はCookie（および利用可能な場合は端末内ストレージ）に保存されます。定期的にバックアップしてください。得点は利用者が入力した値を記録し、公式採点を自動判定するものではありません。</footer>
+<script>
+const KEY='br-score-manager-v1';
+const COOKIE_KEY='br_score_manager_v1';
+const empty=(name='')=>({
+ name,
+ series:Array.from({length:6},()=>Array.from({length:10},()=>null)),
+ ss:Array.from({length:10},()=>null)
+});
+
+function normalizeShot(item){
+ if(!item||typeof item!=='object')return null;
+ const score=Number(item.score),x=Number(item.x),y=Number(item.y);
+ if(!Number.isFinite(score)||score<0||score>10.9||!Number.isFinite(x)||!Number.isFinite(y))return null;
+ const seq=Number.isFinite(Number(item.seq))?Number(item.seq):undefined;
+ return {
+  score:Math.round(score*10)/10,
+  x:Math.round(x*10)/10,
+  y:Math.round(y*10)/10,
+  ...(seq!==undefined?{seq}:{})
+ };
+}
+
+function normalizeData(raw){
+ const base=empty('');
+ if(!raw||typeof raw!=='object')return base;
+ base.name=typeof raw.name==='string'?raw.name.slice(0,40):'';
+ if(Array.isArray(raw.series)&&raw.series.length===6){
+  base.series=raw.series.map(s=>Array.isArray(s)?Array.from({length:10},(_,i)=>normalizeShot(s[i])):Array.from({length:10},()=>null));
+ }
+ if(Array.isArray(raw.ss)){
+  base.ss=Array.from({length:10},(_,i)=>normalizeShot(raw.ss[i]));
+ }
+ return base;
+}
+
+function packShot(x){
+ if(!x)return null;
+ return x.seq!==undefined
+  ?[Math.round(x.score*10),Math.round(x.x*10),Math.round(x.y*10),x.seq]
+  :[Math.round(x.score*10),Math.round(x.x*10),Math.round(x.y*10)];
+}
+
+function unpackShot(v){
+ if(!Array.isArray(v)||v.length<3)return null;
+ return normalizeShot({
+  score:Number(v[0])/10,
+  x:Number(v[1])/10,
+  y:Number(v[2])/10,
+  ...(v[3]!==undefined?{seq:Number(v[3])}:{})
+ });
+}
+
+function packForCookie(d){
+ return {
+  n:d.name||'',
+  s:d.series.map(arr=>arr.map(packShot)),
+  ss:(d.ss||[]).map(packShot)
+ };
+}
+
+function unpackFromCookie(p){
+ if(!p||typeof p!=='object'||!Array.isArray(p.s)||p.s.length!==6)return null;
+ return normalizeData({
+  name:typeof p.n==='string'?p.n:'',
+  series:p.s.map(arr=>Array.isArray(arr)?arr.map(unpackShot):Array.from({length:10},()=>null)),
+  ss:Array.isArray(p.ss)?p.ss.map(unpackShot):Array.from({length:10},()=>null)
+ });
+}
+
+function readCookie(name){
+ const target=name+'=';
+ const parts=document.cookie?document.cookie.split(';'):[];
+ for(const part of parts){
+  const trimmed=part.trim();
+  if(trimmed.startsWith(target)){
+   try{return decodeURIComponent(trimmed.slice(target.length))}catch{return null}
+  }
+ }
+ return null;
+}
+
+function writeCookie(name,value,maxAgeSec=2592000){
+ const encoded=encodeURIComponent(value);
+ if(encoded.length>3800)return false;
+ const secure=location.protocol==='https:'?';SameSite=Lax;Secure':';SameSite=Lax';
+ document.cookie=`${name}=${encoded};max-age=${maxAgeSec};path=/${secure}`;
+ return readCookie(name)===value;
+}
+
+let data=load();
+const hasMainShots=data.series.some(arr=>arr.some(Boolean));
+let activeSeries=0,isSsMode=!hasMainShots,activeShot=0,pendingPoint=null,targetViewMode='current',statusNotice='';
+let shotCounter=computeMaxSeq(data);
+let preparedShareFile=null,preparedShareBlob=null,preparedShareUrl='',preparedFileName='br-score-summary.png';
+
+function computeMaxSeq(d){
+ let maxSeq=0;
+ if(d&&Array.isArray(d.series)){
+  d.series.forEach(arr=>arr.forEach(x=>{if(x&&Number.isFinite(x.seq)&&x.seq>maxSeq)maxSeq=x.seq}));
+ }
+ if(d&&Array.isArray(d.ss)){
+  d.ss.forEach(x=>{if(x&&Number.isFinite(x.seq)&&x.seq>maxSeq)maxSeq=x.seq});
+ }
+ return maxSeq;
+}
+
+function load(){
+ try{
+  const cRaw=readCookie(COOKIE_KEY);
+  if(cRaw){
+   const unpacked=unpackFromCookie(JSON.parse(cRaw));
+   if(unpacked)return unpacked;
+  }
+ }catch{}
+ try{
+  const lRaw=localStorage.getItem(KEY);
+  if(lRaw)return normalizeData(JSON.parse(lRaw));
+ }catch{}
+ return empty('');
+}
+
+function persist(){
+ const timeStr=new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+ let cookieOk=false,localOk=false;
+ try{
+  cookieOk=writeCookie(COOKIE_KEY,JSON.stringify(packForCookie(data)));
+ }catch{}
+ try{
+  localStorage.setItem(KEY,JSON.stringify(data));
+  localOk=true;
+ }catch{}
+ const statusEl=document.getElementById('saveStatus');
+ if(cookieOk&&localOk){
+  statusEl.textContent='Cookie・端末保存済み · '+timeStr;
+ }else if(cookieOk){
+  statusEl.textContent='Cookie保存済み · '+timeStr;
+ }else if(localOk){
+  statusEl.textContent='端末保存済み · '+timeStr;
+ }else{
+  statusEl.textContent='画面反映済み · '+timeStr;
+ }
+ return cookieOk||localOk;
+}
+
+function getActiveSlots(){
+ return isSsMode?data.ss:data.series[activeSeries];
+}
+
+function current(){
+ return getActiveSlots()[activeShot];
+}
+
+function scoreColor(v){if(v===null||v===undefined)return '#64748b';if(v>=10.5)return '#e5484d';if(v>=10)return '#e29a24';return '#1677c8'}
+function total(arr){return arr.reduce((s,x)=>s+(x&&Number.isFinite(x.score)?x.score:0),0)}
+function count(arr){return arr.filter(x=>x&&Number.isFinite(x.score)).length}
+function fmt(v){return Number(v).toFixed(1)}
+function svgEl(tag,attrs){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,String(v));return el}
+
+function todayIso(){
+ const now=new Date();
+ const y=now.getFullYear();
+ const m=String(now.getMonth()+1).padStart(2,'0');
+ const d=String(now.getDate()).padStart(2,'0');
+ return `${y}-${m}-${d}`;
+}
+
+function setRecordNameValue(newName){
+ const cleaned=String(newName||'').trim().slice(0,40);
+ data.name=cleaned;
+ const nameInput=document.getElementById('recordName');
+ if(nameInput)nameInput.value=cleaned;
+ const dateInput=document.getElementById('recordDate');
+ const m=cleaned.match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})/);
+ if(m&&dateInput)dateInput.value=`${m[1]}-${m[2]}-${m[3]}`;
+ persist();
+ if(!document.getElementById('shareBox').classList.contains('hidden'))updateSharePreview();
+}
+
+function applyDateToName(isoStr){
+ if(!isoStr)return;
+ const formatted=isoStr.replace(/-/g,'/');
+ const dateInput=document.getElementById('recordDate');
+ if(dateInput)dateInput.value=isoStr;
+ setRecordNameValue(formatted);
+}
+
+function firstEmptyInSlots(slots){
+ const i=slots.findIndex(x=>!x);
+ return i<0?0:i;
+}
+
+function enterSsMode(){
+ isSsMode=true;
+ activeShot=firstEmptyInSlots(data.ss);
+ pendingPoint=null;
+ statusNotice='';
+ render();
+}
+
+function exitSsMode(){
+ isSsMode=false;
+ activeSeries=0;
+ activeShot=firstEmptyInSlots(data.series[0]);
+ pendingPoint=null;
+ statusNotice='S1（本射）へ移動しました';
+ render();
+}
+
+function collectAllPoints(){
+ const list=[];
+ (data.ss||[]).forEach((r,idx)=>{
+  if(!r||!Number.isFinite(r.x)||!Number.isFinite(r.y))return;
+  list.push({
+   ...r,
+   label:`SS-${idx+1}`,
+   shortLabel:`T${idx+1}`,
+   isSs:true
+  });
+ });
+ data.series.forEach((arr,sIdx)=>{
+  arr.forEach((r,idx)=>{
+   if(!r||!Number.isFinite(r.x)||!Number.isFinite(r.y))return;
+   list.push({
+    ...r,
+    label:`S${sIdx+1}-${idx+1}`,
+    shortLabel:String(idx+1),
+    isSs:false
+   });
+  });
+ });
+ return list;
+}
+
+function collectRecent5Points(){
+ const all=collectAllPoints();
+ all.sort((a,b)=>(a.seq||0)-(b.seq||0));
+ return all.slice(-5);
+}
+
+function renderCoordStatus(){
+ const el=document.getElementById('coordStatus');
+ const rec=current();
+ if(pendingPoint){
+  el.textContent=`選択中（未保存）：X ${pendingPoint.x.toFixed(1)} / Y ${pendingPoint.y.toFixed(1)}`;
+ }else if(statusNotice){
+  el.textContent=statusNotice;
+ }else if(rec&&Number.isFinite(rec.x)&&Number.isFinite(rec.y)){
+  el.textContent=`記録済み位置：X ${Number(rec.x).toFixed(1)} / Y ${Number(rec.y).toFixed(1)}`;
+ }else{
+  el.textContent='的をタップして着弾位置を指定してください（未選択）';
+ }
+}
+
+function render(){
+ const nameInput=document.getElementById('recordName');
+ if(nameInput&&document.activeElement!==nameInput)nameInput.value=data.name||'';
+ const dateInput=document.getElementById('recordDate');
+ const m=(data.name||'').match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})/);
+ if(m&&dateInput&&document.activeElement!==dateInput)dateInput.value=`${m[1]}-${m[2]}-${m[3]}`;
+
+ const ssHtml=`<button type="button" class="ss-tab ${isSsMode?'active':''}" id="ssTabBtn">SS</button>`;
+ const seriesHtml=Array.from({length:6},(_,i)=>`<button type="button" class="${(!isSsMode&&i===activeSeries)?'active':''}" data-series="${i}">S${i+1}</button>`).join('');
+ document.getElementById('seriesTabs').innerHTML=ssHtml+seriesHtml;
+
+ document.getElementById('ssTabBtn').onclick=enterSsMode;
+ document.querySelectorAll('[data-series]').forEach(b=>b.onclick=()=>{
+  isSsMode=false;
+  activeSeries=+b.dataset.series;
+  activeShot=firstEmptyInSlots(data.series[activeSeries]);
+  pendingPoint=null;
+  statusNotice='';
+  render();
+ });
+
+ document.getElementById('ssBanner').classList.toggle('hidden',!isSsMode);
+ document.getElementById('endSsInlineBtn').classList.toggle('hidden',!isSsMode);
+
+ const slots=getActiveSlots();
+ const modePrefix=isSsMode?'SS（試射）':`S${activeSeries+1}`;
+ document.getElementById('targetTitle').textContent=`${modePrefix} · 着弾位置`;
+ document.getElementById('shotProgress').textContent=`${count(slots)} / 10 発`;
+ document.getElementById('shotLabel').textContent=`${modePrefix} · ${activeShot+1}発目`;
+ document.getElementById('modeBadge').textContent=isSsMode?'試射（本射S1前）':'全6シリーズ・60発';
+ document.getElementById('statTotalLabel').textContent=isSsMode?'試射合計':'シリーズ合計';
+
+ document.querySelectorAll('[data-viewmode]').forEach(b=>{
+  b.classList.toggle('active',b.dataset.viewmode===targetViewMode);
+ });
+
+ const rec=current();
+ document.getElementById('score').value=rec?.score??'';
+ document.getElementById('shotButtons').innerHTML=slots.map((x,i)=>`<button type="button" class="shot ${i===activeShot?'selected':''}" data-shot="${i}"><b>${i+1}発目</b><span>${x?fmt(x.score):'—'}</span></button>`).join('');
+ document.querySelectorAll('[data-shot]').forEach(b=>b.onclick=()=>{
+  activeShot=+b.dataset.shot;
+  pendingPoint=null;
+  statusNotice='';
+  render();
+ });
+
+ document.getElementById('seriesTotal').textContent=fmt(total(slots));
+ document.getElementById('seriesCount').textContent=count(slots)+'/10';
+ document.getElementById('seriesAverage').textContent=count(slots)?fmt(total(slots)/count(slots)):'—';
+
+ renderMarkers();
+ renderCoordStatus();
+ renderSummary();
+ if(!document.getElementById('shareBox').classList.contains('hidden'))updateSharePreview();
+}
+
+function drawMarkerOnSvg(g,pt,labelText,isHighlighted,isSsMarker){
+ g.appendChild(svgEl('circle',{
+  cx:pt.x,
+  cy:pt.y,
+  r:isHighlighted?'8':'6',
+  fill:scoreColor(pt.score),
+  stroke:isHighlighted?'#172536':(isSsMarker?'#8a4b08':'white'),
+  'stroke-width':isHighlighted?'2.5':'1.6'
+ }));
+ const t=svgEl('text',{x:pt.x+8,y:pt.y-8,'font-size':'10',fill:'#172536'});
+ t.textContent=labelText;
+ g.appendChild(t);
+}
+
+function renderMarkers(){
+ const g=document.getElementById('markers');
+ g.innerHTML='';
+ if(targetViewMode==='all'){
+  collectAllPoints().forEach(r=>drawMarkerOnSvg(g,r,r.label,false,r.isSs));
+ }else if(targetViewMode==='recent5'){
+  const recent=collectRecent5Points();
+  recent.forEach((r,idx)=>drawMarkerOnSvg(g,r,r.label,idx===recent.length-1,r.isSs));
+ }else{
+  getActiveSlots().forEach((r,i)=>{
+   if(!r||!Number.isFinite(r.x)||!Number.isFinite(r.y))return;
+   drawMarkerOnSvg(g,r,isSsMode?`T${i+1}`:String(i+1),i===activeShot,isSsMode);
+  });
+ }
+ if(pendingPoint){
+  const {x,y}=pendingPoint;
+  g.appendChild(svgEl('circle',{cx:x,cy:y,r:'11',fill:'rgba(229,72,77,0.14)',stroke:'#e5484d','stroke-width':'2.5'}));
+  g.appendChild(svgEl('line',{x1:x-16,y1:y,x2:x+16,y2:y,stroke:'#e5484d','stroke-width':'2'}));
+  g.appendChild(svgEl('line',{x1:x,y1:y-16,x2:x,y2:y+16,stroke:'#e5484d','stroke-width':'2'}));
+  g.appendChild(svgEl('circle',{cx:x,cy:y,r:'3',fill:'#e5484d'}));
+ }
+}
+
+function renderSummary(){
+ const ssArr=data.ss||[];
+ const ssGroups={low:0,mid:0,high:0};
+ ssArr.forEach(x=>{if(x){if(x.score>=10.5)ssGroups.high++;else if(x.score>=10)ssGroups.mid++;else ssGroups.low++}});
+ const ssRow=`<tr><td><b>SS</b></td><td>${count(ssArr)}/10</td><td>${fmt(total(ssArr))}</td><td>${count(ssArr)?fmt(total(ssArr)/count(ssArr)):'—'}</td><td>9点台以下 ${ssGroups.low} · 10.0〜10.4 ${ssGroups.mid} · 10.5以上 ${ssGroups.high}</td></tr>`;
+
+ const rows=data.series.map((arr,i)=>{
+  const groups={low:0,mid:0,high:0};
+  arr.forEach(x=>{if(x){if(x.score>=10.5)groups.high++;else if(x.score>=10)groups.mid++;else groups.low++}});
+  return `<tr><td><b>S${i+1}</b></td><td>${count(arr)}/10</td><td>${fmt(total(arr))}</td><td>${count(arr)?fmt(total(arr)/count(arr)):'—'}</td><td>9点台以下 ${groups.low} · 10.0〜10.4 ${groups.mid} · 10.5以上 ${groups.high}</td></tr>`;
+ });
+ document.getElementById('summaryRows').innerHTML=ssRow+rows.join('');
+}
+
+function clientToSvgPoint(svg,clientX,clientY){
+ const ctm=svg.getScreenCTM&&svg.getScreenCTM();
+ if(ctm){
+  const pt=svg.createSVGPoint();
+  pt.x=clientX;pt.y=clientY;
+  const p=pt.matrixTransform(ctm.inverse());
+  return {x:p.x,y:p.y};
+ }
+ const rect=svg.getBoundingClientRect();
+ const vb=svg.viewBox.baseVal||{width:400,height:400};
+ return {
+  x:((clientX-rect.left)/Math.max(1,rect.width))*vb.width,
+  y:((clientY-rect.top)/Math.max(1,rect.height))*vb.height
+ };
+}
+
+const targetSvg=document.getElementById('target');
+targetSvg.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ e.preventDefault();
+ const raw=clientToSvgPoint(targetSvg,e.clientX,e.clientY);
+ pendingPoint={
+  x:Math.round(Math.max(20,Math.min(380,raw.x))*10)/10,
+  y:Math.round(Math.max(20,Math.min(380,raw.y))*10)/10
+ };
+ statusNotice='';
+ renderMarkers();
+ renderCoordStatus();
+},{passive:false});
+
+document.querySelectorAll('[data-viewmode]').forEach(b=>{
+ b.addEventListener('click',()=>{
+  targetViewMode=b.dataset.viewmode;
+  render();
+ });
+});
+
+document.getElementById('endSsBtn').addEventListener('click',exitSsMode);
+document.getElementById('endSsInlineBtn').addEventListener('click',exitSsMode);
+
+document.getElementById('deselectPoint').addEventListener('click',()=>{
+ pendingPoint=null;
+ statusNotice='';
+ renderMarkers();
+ renderCoordStatus();
+});
+
+const recordDateEl=document.getElementById('recordDate');
+recordDateEl.addEventListener('change',e=>applyDateToName(e.target.value));
+recordDateEl.addEventListener('input',e=>applyDateToName(e.target.value));
+
+document.getElementById('setTodayBtn').addEventListener('click',()=>{
+ applyDateToName(todayIso());
+});
+
+document.getElementById('saveName').addEventListener('click',()=>{
+ const val=document.getElementById('recordName').value;
+ setRecordNameValue(val);
+});
+
+document.getElementById('recordName').addEventListener('keydown',e=>{
+ if(e.key==='Enter'){
+  e.preventDefault();
+  setRecordNameValue(e.target.value);
+ }
+});
+
+document.getElementById('saveShot').addEventListener('click',()=>{
+ const rawVal=document.getElementById('score').value.trim();
+ const v=rawVal===''?NaN:Number(rawVal);
+ if(!Number.isFinite(v)||v<0||v>10.9){alert('得点は0.0〜10.9の範囲で入力してください。');return}
+ const old=current(),point=pendingPoint||(old&&Number.isFinite(old.x)&&Number.isFinite(old.y)?{x:old.x,y:old.y}:null);
+ if(!point){alert('先に標的図をタップして着弾位置を指定してください。');return}
+ data.name=document.getElementById('recordName').value.trim().slice(0,40);
+ shotCounter+=1;
+ const slots=getActiveSlots();
+ slots[activeShot]={score:Math.round(v*10)/10,x:point.x,y:point.y,seq:shotCounter};
+ persist();
+ pendingPoint=null;
+ statusNotice='';
+ if(!isSsMode&&activeShot===9){
+  if(activeSeries<5){
+   const nextSeries=activeSeries+1;
+   activeSeries=nextSeries;
+   activeShot=firstEmptyInSlots(data.series[nextSeries]);
+   statusNotice=`S${nextSeries+1} へ自動で移動しました`;
+  }else{
+   statusNotice='S6（10発目）まで記録しました';
+  }
+ }else if(activeShot<9){
+  activeShot++;
+ }
+ render();
+});
+
+function buildSummaryCanvas(){
+ const canvas=document.createElement('canvas');
+ canvas.width=1080;
+ canvas.height=640;
+ const ctx=canvas.getContext('2d');
+ ctx.fillStyle='#f3f6f9';
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ ctx.fillStyle='#14263a';
+ ctx.fillRect(0,0,canvas.width,86);
+ ctx.fillStyle='#ffffff';
+ ctx.font='bold 28px system-ui,-apple-system,"Segoe UI",sans-serif';
+ ctx.fillText('BR SCORE MANAGER · 成績まとめ',28,52);
+
+ const titleText=data.name?`記録名：${data.name}`:'記録名：（未設定）';
+ const allShots=data.series.flat().filter(x=>x&&Number.isFinite(x.score));
+ const grandTotal=allShots.reduce((s,x)=>s+x.score,0);
+ const grandAvg=allShots.length?fmt(grandTotal/allShots.length):'—';
+
+ ctx.fillStyle='#172536';
+ ctx.font='bold 20px system-ui,-apple-system,"Segoe UI",sans-serif';
+ ctx.fillText(titleText,28,124);
+ ctx.fillStyle='#245b85';
+ ctx.fillText(`本射：${allShots.length}/60発  合計 ${fmt(grandTotal)}  平均 ${grandAvg}`,28,154);
+
+ ctx.fillStyle='#ffffff';
+ ctx.fillRect(28,174,620,430);
+ ctx.strokeStyle='#dce3ea';
+ ctx.lineWidth=2;
+ ctx.strokeRect(28,174,620,430);
+
+ ctx.fillStyle='#64748b';
+ ctx.font='bold 14px system-ui,-apple-system,"Segoe UI",sans-serif';
+ ctx.fillText('シリーズ',48,208);
+ ctx.fillText('発数',132,208);
+ ctx.fillText('合計',202,208);
+ ctx.fillText('平均',282,208);
+ ctx.fillText('9以下 / 10.0-10.4 / 10.5+',360,208);
+
+ data.series.forEach((arr,i)=>{
+  const y=252+i*56;
+  const g={low:0,mid:0,high:0};
+  arr.forEach(x=>{if(x){if(x.score>=10.5)g.high++;else if(x.score>=10)g.mid++;else g.low++}});
+  ctx.strokeStyle='#eef2f6';
+  ctx.beginPath();ctx.moveTo(44,y+16);ctx.lineTo(632,y+16);ctx.stroke();
+  ctx.fillStyle='#172536';
+  ctx.font='bold 18px system-ui,-apple-system,"Segoe UI",sans-serif';
+  ctx.fillText(`S${i+1}`,48,y);
+  ctx.font='17px system-ui,-apple-system,"Segoe UI",sans-serif';
+  ctx.fillText(`${count(arr)}/10`,132,y);
+  ctx.fillText(fmt(total(arr)),202,y);
+  ctx.fillText(count(arr)?fmt(total(arr)/count(arr)):'—',282,y);
+  ctx.fillText(`${g.low} / ${g.mid} / ${g.high}`,360,y);
+ });
+
+ ctx.fillStyle='#ffffff';
+ ctx.fillRect(670,174,382,430);
+ ctx.strokeStyle='#dce3ea';
+ ctx.strokeRect(670,174,382,430);
+ ctx.fillStyle='#172536';
+ ctx.font='bold 17px system-ui,-apple-system,"Segoe UI",sans-serif';
+ ctx.fillText('全ての着弾分布',692,206);
+
+ const scale=0.78,ox=692,oy=220;
+ ctx.save();
+ ctx.translate(ox,oy);
+ ctx.scale(scale,scale);
+ ctx.fillStyle='#fbfcfd';
+ ctx.fillRect(0,0,400,400);
+ ctx.strokeStyle='#526273';
+ ctx.lineWidth=1.4;
+ for(let r=17;r<=170;r+=17){
+  ctx.beginPath();ctx.arc(200,200,r,0,Math.PI*2);ctx.stroke();
+ }
+ ctx.strokeStyle='#9aa6b2';
+ ctx.setLineDash([4,5]);
+ ctx.beginPath();ctx.moveTo(200,20);ctx.lineTo(200,380);ctx.moveTo(20,200);ctx.lineTo(380,200);ctx.stroke();
+ ctx.setLineDash([]);
+ collectAllPoints().forEach(pt=>{
+  ctx.fillStyle=scoreColor(pt.score);
+  ctx.beginPath();ctx.arc(pt.x,pt.y,7,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=pt.isSs?'#8a4b08':'#ffffff';
+  ctx.lineWidth=1.6;ctx.stroke();
+  ctx.fillStyle='#172536';ctx.font='bold 10px system-ui,-apple-system,"Segoe UI",sans-serif';
+  ctx.fillText(pt.label,pt.x+8,pt.y-6);
+ });
+ ctx.restore();
+
+ return canvas;
+}
+
+function dataUrlToBlob(dataUrl){
+ const parts=dataUrl.split(',');
+ const mime=(parts[0].match(/:(.*?);/)||[])[1]||'image/png';
+ const bstr=atob(parts[1]);
+ let n=bstr.length;
+ const u8arr=new Uint8Array(n);
+ while(n--)u8arr[n]=bstr.charCodeAt(n);
+ return new Blob([u8arr],{type:mime});
+}
+
+function updateSharePreview(){
+ const nameInput=document.getElementById('recordName');
+ if(nameInput)data.name=nameInput.value.trim().slice(0,40);
+ const canvas=buildSummaryCanvas();
+ const dataUrl=canvas.toDataURL('image/png');
+ if(preparedShareUrl&&preparedShareUrl.startsWith('blob:')){
+  try{URL.revokeObjectURL(preparedShareUrl)}catch{}
+ }
+ const safeName=(data.name||'br-score').replace(/[\\/:*?"<>|\s]+/g,'_');
+ preparedFileName=`${safeName}-summary.png`;
+ preparedShareBlob=null;
+ preparedShareFile=null;
+ preparedShareUrl=dataUrl;
+
+ try{
+  const blob=dataUrlToBlob(dataUrl);
+  preparedShareBlob=blob;
+  preparedShareUrl=URL.createObjectURL(blob);
+  if(typeof File==='function'){
+   preparedShareFile=new File([blob],preparedFileName,{type:'image/png'});
+  }
+ }catch(err){
+  console.warn('画像Blob/File生成フォールバック:',err);
+ }
+
+ const imgEl=document.getElementById('sharePreviewImg');
+ if(imgEl)imgEl.src=preparedShareUrl;
+}
+
+function triggerImageDownload(){
+ updateSharePreview();
+ if(!preparedShareUrl){
+  alert('画像を生成できませんでした。');
+  return;
+ }
+ const a=document.createElement('a');
+ a.href=preparedShareUrl;
+ a.download=preparedFileName;
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+}
+
+document.getElementById('openSharePreview').addEventListener('click',()=>{
+ const box=document.getElementById('shareBox');
+ box.classList.remove('hidden');
+ updateSharePreview();
+ box.scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+
+document.getElementById('closeSharePreview').addEventListener('click',()=>{
+ document.getElementById('shareBox').classList.add('hidden');
+});
+
+document.getElementById('shareBtn').addEventListener('click',async()=>{
+ updateSharePreview();
+ if(typeof navigator.share==='function'&&preparedShareFile){
+  const sharePayload={
+   title:'BR Score Manager 成績まとめ',
+   text:data.name||undefined,
+   files:[preparedShareFile]
+  };
+  const canShareFiles=!navigator.canShare||navigator.canShare(sharePayload);
+  if(canShareFiles){
+   try{
+    await navigator.share(sharePayload);
+    return;
+   }catch(err){
+    if(err&&err.name==='AbortError')return;
+   }
+  }
+ }
+ triggerImageDownload();
+});
+
+document.getElementById('downloadImageBtn').addEventListener('click',triggerImageDownload);
+
+document.getElementById('prevShot').addEventListener('click',()=>{activeShot=Math.max(0,activeShot-1);pendingPoint=null;statusNotice='';render()});
+document.getElementById('nextShot').addEventListener('click',()=>{activeShot=Math.min(9,activeShot+1);pendingPoint=null;statusNotice='';render()});
+document.getElementById('clearShot').addEventListener('click',()=>{if(confirm('この発の得点と着弾位置を削除しますか？')){getActiveSlots()[activeShot]=null;persist();pendingPoint=null;statusNotice='';render()}});
+document.getElementById('newSession').addEventListener('click',()=>{if(confirm('現在の記録を消去して、新しい記録を開始しますか？ 先にバックアップをおすすめします。')){data=empty(data.name||'');shotCounter=0;activeSeries=0;isSsMode=true;activeShot=0;pendingPoint=null;statusNotice='';persist();render()}});
+document.getElementById('exportData').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='br-score-backup.json';a.click();URL.revokeObjectURL(a.href)});
+document.getElementById('importButton').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.series)||x.series.length!==6||x.series.some(a=>!Array.isArray(a)||a.length!==10))throw Error();data=normalizeData(x);shotCounter=Math.max(shotCounter,computeMaxSeq(data));persist();render();alert('バックアップを復元しました。')}catch{alert('このファイルはBR Score Managerのバックアップではありません。')}e.target.value=''});
+document.getElementById('resetAll').addEventListener('click',()=>{if(confirm('全シリーズの記録を完全に削除しますか？')){data=empty('');shotCounter=0;isSsMode=true;activeSeries=0;activeShot=0;statusNotice='';persist();render()}});
+document.getElementById('recordDate').value=todayIso();
+render();
+</script>
+</body>
+</html>
