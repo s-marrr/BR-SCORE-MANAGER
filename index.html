@@ -17,11 +17,11 @@ main{max-width:1180px;margin:18px auto;padding:0 14px 36px}
 .record-meta label{font-size:12px;color:var(--muted);font-weight:700}
 .record-meta input[type="text"]{flex:1;min-width:180px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#172536}
 .record-meta input[type="date"]{padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#172536}
-button,select,input{font:inherit}button{border:1px solid var(--line);background:white;border-radius:10px;padding:10px 13px;cursor:pointer;color:#172536;-webkit-tap-highlight-color:transparent}
+button,select,input,textarea{font:inherit}button{border:1px solid var(--line);background:white;border-radius:10px;padding:10px 13px;cursor:pointer;color:#172536;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 button.primary{background:var(--blue);border-color:var(--blue);color:white}button.active{background:#e5f1fb;border-color:#76a9d2;color:#12466f}
 button.ss-tab.active{background:var(--ss-bg);border-color:var(--ss-line);color:var(--ss-text)}
 button.end-ss{background:#9a3412;border-color:#9a3412;color:white;font-weight:700}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #8ec5f3;outline-offset:2px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #8ec5f3;outline-offset:2px}
 .series-tabs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;flex:1;min-width:300px}
 .series-tabs button{font-weight:700;padding:12px 4px}
 .view-mode-bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
@@ -38,7 +38,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:12px;color:var(--muted)}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
 .current{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
-.pill{background:#edf3f8;color:#34536e;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:700}
+.pill{background:#edf3f8;color:#34536e;padding:5px 9px;border-radius:99px;font-size:12px;font-weight:700;white-space:nowrap}
 .score-input{display:flex;gap:8px;align-items:end;margin:12px 0}
 .score-input label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
 .score-input input{width:130px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:20px}
@@ -59,9 +59,45 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .share-hint{font-size:12px;color:var(--muted);margin:8px 0 0}
 table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:9px 7px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted);font-size:12px}
 .color-key{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:8px 0}
+
+/* 定型文全画面表示カード */
+.display-card{margin-top:14px}
+.display-textarea{width:100%;min-height:96px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:#172536;font-size:15px;line-height:1.6;resize:vertical}
+.style-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:12px;background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:12px}
+.color-field{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#172536;white-space:nowrap}
+.color-field input[type="color"]{width:38px;height:32px;padding:2px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+.size-field{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#172536;flex:1 1 240px;min-width:220px}
+.size-label{white-space:nowrap}
+.size-val{min-width:48px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.size-field input[type="range"]{flex:1;min-width:90px;cursor:pointer}
+.size-num{width:76px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:#fff;color:#172536;font-size:13px;font-weight:700;text-align:right}
+.theme-presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.theme-presets button{padding:6px 10px;font-size:12px;border-radius:8px}
+.preset-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.preset-chip{display:inline-flex;align-items:center;gap:6px;background:#f4f7fa;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;max-width:100%}
+.preset-chip button.use-preset{border:none;background:transparent;padding:2px 4px;font-weight:700;color:var(--info-text);text-align:left;white-space:normal;word-break:break-word}
+.preset-chip button.load-preset{border:1px solid var(--line);background:#fff;border-radius:7px;padding:3px 8px;font-size:11px;color:#34536e}
+.preset-chip button.del-preset{border:none;background:transparent;padding:2px 4px;color:var(--muted);font-size:12px}
+
+/* 全画面オーバーレイ */
+.fullscreen-viewer{position:fixed;inset:0;z-index:9999;background:#0f1d2d;color:#ffffff;display:flex;flex-direction:column;padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+.fs-top{display:flex;flex-direction:column;gap:10px;padding-bottom:10px;border-bottom:1px solid rgba(128,128,128,.28);flex-shrink:0}
+.fs-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.fs-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fs-controls .color-field{color:inherit;font-size:12px}
+.fs-controls .color-field input[type="color"]{width:34px;height:30px}
+.fs-controls .size-field{color:inherit;font-size:12px;flex:1 1 220px;min-width:200px;margin:0}
+.fs-controls .size-num{width:68px;padding:5px 7px;font-size:12px}
+.fs-align-group{display:inline-flex;align-items:center;gap:6px}
+.fs-align-group button{background:rgba(128,128,128,.18);border-color:rgba(128,128,128,.35);color:inherit;padding:7px 11px;font-size:12px;border-radius:9px}
+.fs-align-group button.active{background:var(--blue);border-color:#76a9d2;color:#fff}
+.fs-close{background:#e5484d;border-color:#e5484d;color:#fff;font-weight:700;padding:7px 13px;font-size:12px;border-radius:9px}
+.fs-body{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;padding:20px 8px}
+.fs-text{width:100%;max-width:100%;white-space:pre-wrap;word-break:break-word;line-height:1.35;font-weight:700;font-size:44px;text-align:center}
+
 footer{max-width:1180px;margin:0 auto;padding:0 14px 24px;color:var(--muted);font-size:12px}
 .hidden{display:none!important}
-@media(max-width:780px){.layout{grid-template-columns:1fr}.card{padding:13px}.target-wrap{max-width:480px}.header-inner{align-items:flex-start;flex-direction:column}}
+@media(max-width:780px){.layout{grid-template-columns:1fr}.card{padding:13px}.target-wrap{max-width:480px}.header-inner{align-items:flex-start;flex-direction:column}.fs-text{font-size:32px}}
 @media(max-width:380px){.shots{gap:5px}.shot{padding:8px 2px}.shot span{font-size:14px}.stats{gap:5px}.stat strong{font-size:17px}}
 </style>
 </head>
@@ -138,6 +174,40 @@ footer{max-width:1180px;margin:0 auto;padding:0 14px 24px;color:var(--muted);fon
       </div>
     </section>
   </div>
+
+  <section class="card display-card">
+    <h2>定型文の全画面表示</h2>
+    <label for="displayTextInput" style="display:block;font-size:12px;color:#64748b;margin-bottom:6px">定型文（入力・編集して全画面表示や定型文登録ができます）</label>
+    <textarea id="displayTextInput" class="display-textarea" placeholder="表示したい定型文を入力してください。"></textarea>
+
+    <div class="style-controls">
+      <label class="color-field">背景色<input type="color" id="bgColorInput" value="#0f1d2d"></label>
+      <label class="color-field">文字色<input type="color" id="textColorInput" value="#ffffff"></label>
+      <div class="size-field">
+        <span class="size-label">文字サイズ</span>
+        <span class="size-val" id="fontSizeValue">44px</span>
+        <input type="range" id="fontSizeSlider" min="18" max="360" step="2" value="44" aria-label="文字サイズスライダー">
+        <input type="number" class="size-num" id="fontSizeNumber" min="12" step="2" value="44" aria-label="文字サイズpx直接入力">
+      </div>
+    </div>
+
+    <div class="theme-presets" aria-label="配色プリセット">
+      <span style="font-size:12px;color:#64748b;font-weight:700">配色：</span>
+      <button type="button" data-theme="#0f1d2d|#ffffff">濃紺 × 白</button>
+      <button type="button" data-theme="#ffffff|#172536">白 × 黒</button>
+      <button type="button" data-theme="#111827|#fde047">黒 × 黄</button>
+      <button type="button" data-theme="#fef3c7|#7c2d12">クリーム × 茶</button>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary" id="openFullscreenBtn">画面いっぱいに表示</button>
+      <button type="button" id="savePresetBtn">定型文として保存</button>
+      <button type="button" id="clearDisplayTextBtn">入力をクリア</button>
+    </div>
+
+    <div class="preset-list" id="presetList" aria-label="保存済み定型文一覧"></div>
+  </section>
+
   <section class="card summary">
     <h2>シリーズ別・着弾地点と得点の集計</h2>
     <div class="color-key"><span><i class="dot" style="background:#1677c8"></i>9点台以下</span><span><i class="dot" style="background:#e29a24"></i>10.0〜10.4</span><span><i class="dot" style="background:#e5484d"></i>10.5以上</span></div>
@@ -163,15 +233,65 @@ footer{max-width:1180px;margin:0 auto;padding:0 14px 24px;color:var(--muted);fon
     </div>
   </section>
 </main>
+
+<div class="fullscreen-viewer hidden" id="fullscreenViewer" role="dialog" aria-modal="true" aria-label="定型文の全画面表示">
+  <div class="fs-top fs-controls">
+    <div class="fs-row">
+      <div class="fs-group">
+        <label class="color-field">背景<input type="color" id="fsBgColorInput" value="#0f1d2d"></label>
+        <label class="color-field">文字<input type="color" id="fsTextColorInput" value="#ffffff"></label>
+      </div>
+      <button type="button" class="fs-close" id="closeFullscreenBtn">閉じる</button>
+    </div>
+    <div class="fs-row">
+      <div class="size-field">
+        <span class="size-label">文字サイズ</span>
+        <span class="size-val" id="fsFontSizeValue">44px</span>
+        <input type="range" id="fsFontSizeSlider" min="18" max="360" step="2" value="44" aria-label="全画面文字サイズスライダー">
+        <input type="number" class="size-num" id="fsFontSizeNumber" min="12" step="2" value="44" aria-label="全画面文字サイズpx直接入力">
+      </div>
+      <div class="fs-align-group" role="group" aria-label="文字揃え">
+        <button type="button" data-fsalign="left">左寄せ</button>
+        <button type="button" class="active" data-fsalign="center">中央</button>
+        <button type="button" data-fsalign="right">右寄せ</button>
+      </div>
+    </div>
+  </div>
+  <div class="fs-body" id="fsBody">
+    <div class="fs-text" id="fsText"></div>
+  </div>
+</div>
+
 <footer>記録はCookie（および利用可能な場合は端末内ストレージ）に保存されます。定期的にバックアップしてください。得点は利用者が入力した値を記録し、公式採点を自動判定するものではありません。</footer>
 <script>
 const KEY='br-score-manager-v1';
 const COOKIE_KEY='br_score_manager_v1';
+const DEFAULT_PRESETS=[
+ '呼吸を整えて、引き金をまっすぐ引く',
+ '姿勢と頬付けをリセット'
+];
 const empty=(name='')=>({
  name,
  series:Array.from({length:6},()=>Array.from({length:10},()=>null)),
- ss:Array.from({length:10},()=>null)
+ ss:Array.from({length:10},()=>null),
+ displayText:'',
+ presets:[...DEFAULT_PRESETS],
+ fsBgColor:'#0f1d2d',
+ fsTextColor:'#ffffff',
+ fsFontSize:44,
+ fsAlign:'center'
 });
+
+function normalizeHex(val,fallback){
+ if(typeof val!=='string')return fallback;
+ return /^#[0-9a-fA-F]{6}$/.test(val.trim())?val.trim().toLowerCase():fallback;
+}
+
+function normalizeFontSize(val,fallback=44){
+ const sz=Number(val);
+ if(!Number.isFinite(sz)||sz<12)return fallback;
+ return Math.round(sz);
+}
 
 function normalizeShot(item){
  if(!item||typeof item!=='object')return null;
@@ -196,6 +316,16 @@ function normalizeData(raw){
  if(Array.isArray(raw.ss)){
   base.ss=Array.from({length:10},(_,i)=>normalizeShot(raw.ss[i]));
  }
+ if(typeof raw.displayText==='string'){
+  base.displayText=raw.displayText;
+ }
+ if(Array.isArray(raw.presets)){
+  base.presets=raw.presets.filter(p=>typeof p==='string'&&p.trim()).map(p=>p.trim()).slice(0,30);
+ }
+ base.fsBgColor=normalizeHex(raw.fsBgColor,'#0f1d2d');
+ base.fsTextColor=normalizeHex(raw.fsTextColor,'#ffffff');
+ base.fsFontSize=normalizeFontSize(raw.fsFontSize,44);
+ base.fsAlign=['left','center','right'].includes(raw.fsAlign)?raw.fsAlign:'center';
  return base;
 }
 
@@ -220,7 +350,13 @@ function packForCookie(d){
  return {
   n:d.name||'',
   s:d.series.map(arr=>arr.map(packShot)),
-  ss:(d.ss||[]).map(packShot)
+  ss:(d.ss||[]).map(packShot),
+  dt:(d.displayText||'').slice(0,200),
+  pr:(d.presets||[]).slice(0,10).map(p=>p.slice(0,80)),
+  bg:d.fsBgColor||'#0f1d2d',
+  fg:d.fsTextColor||'#ffffff',
+  fz:d.fsFontSize||44,
+  al:d.fsAlign||'center'
  };
 }
 
@@ -229,7 +365,13 @@ function unpackFromCookie(p){
  return normalizeData({
   name:typeof p.n==='string'?p.n:'',
   series:p.s.map(arr=>Array.isArray(arr)?arr.map(unpackShot):Array.from({length:10},()=>null)),
-  ss:Array.isArray(p.ss)?p.ss.map(unpackShot):Array.from({length:10},()=>null)
+  ss:Array.isArray(p.ss)?p.ss.map(unpackShot):Array.from({length:10},()=>null),
+  displayText:typeof p.dt==='string'?p.dt:'',
+  presets:Array.isArray(p.pr)?p.pr:DEFAULT_PRESETS,
+  fsBgColor:p.bg,
+  fsTextColor:p.fg,
+  fsFontSize:p.fz,
+  fsAlign:p.al
  });
 }
 
@@ -417,12 +559,122 @@ function renderCoordStatus(){
  }
 }
 
+function escapeHtml(s){
+ return String(s||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function applyViewerStyle(){
+ const bg=normalizeHex(data.fsBgColor,'#0f1d2d');
+ const fg=normalizeHex(data.fsTextColor,'#ffffff');
+ const sz=normalizeFontSize(data.fsFontSize,44);
+ const sliderMax=Math.max(360,sz);
+ const al=['left','center','right'].includes(data.fsAlign)?data.fsAlign:'center';
+
+ document.getElementById('bgColorInput').value=bg;
+ document.getElementById('textColorInput').value=fg;
+ document.getElementById('fsBgColorInput').value=bg;
+ document.getElementById('fsTextColorInput').value=fg;
+
+ const slider1=document.getElementById('fontSizeSlider');
+ const slider2=document.getElementById('fsFontSizeSlider');
+ slider1.max=String(sliderMax);
+ slider2.max=String(sliderMax);
+ slider1.value=String(sz);
+ slider2.value=String(sz);
+
+ const num1=document.getElementById('fontSizeNumber');
+ const num2=document.getElementById('fsFontSizeNumber');
+ if(document.activeElement!==num1)num1.value=String(sz);
+ if(document.activeElement!==num2)num2.value=String(sz);
+
+ document.getElementById('fontSizeValue').textContent=sz+'px';
+ document.getElementById('fsFontSizeValue').textContent=sz+'px';
+
+ const viewerEl=document.getElementById('fullscreenViewer');
+ viewerEl.style.background=bg;
+ viewerEl.style.color=fg;
+
+ const textEl=document.getElementById('fsText');
+ textEl.style.fontSize=sz+'px';
+ textEl.style.textAlign=al;
+
+ document.querySelectorAll('[data-fsalign]').forEach(b=>{
+  b.classList.toggle('active',b.dataset.fsalign===al);
+ });
+}
+
+function renderPresets(){
+ const listEl=document.getElementById('presetList');
+ const presets=Array.isArray(data.presets)?data.presets:[];
+ if(!presets.length){
+  listEl.innerHTML='<span style="font-size:12px;color:#64748b">保存された定型文はありません。上の欄に入力して「定型文として保存」を押してください。</span>';
+  return;
+ }
+ listEl.innerHTML=presets.map((txt,idx)=>`
+  <div class="preset-chip">
+   <button type="button" class="use-preset" data-usepreset="${idx}">${escapeHtml(txt)}</button>
+   <button type="button" class="load-preset" data-loadpreset="${idx}">編集</button>
+   <button type="button" class="del-preset" data-delpreset="${idx}" aria-label="定型文を削除">✕</button>
+  </div>
+ `).join('');
+
+ listEl.querySelectorAll('[data-usepreset]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+   const idx=+btn.dataset.usepreset;
+   const chosen=data.presets[idx]||'';
+   data.displayText=chosen;
+   document.getElementById('displayTextInput').value=chosen;
+   persist();
+   openFullscreenWithText(chosen);
+  });
+ });
+
+ listEl.querySelectorAll('[data-loadpreset]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+   const idx=+btn.dataset.loadpreset;
+   const chosen=data.presets[idx]||'';
+   data.displayText=chosen;
+   document.getElementById('displayTextInput').value=chosen;
+   persist();
+  });
+ });
+
+ listEl.querySelectorAll('[data-delpreset]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+   const idx=+btn.dataset.delpreset;
+   data.presets.splice(idx,1);
+   persist();
+   renderPresets();
+  });
+ });
+}
+
+function openFullscreenWithText(text){
+ const content=(text||'').trim();
+ if(!content){
+  alert('表示する定型文を入力するか、定型文を選んでください。');
+  return;
+ }
+ applyViewerStyle();
+ document.getElementById('fsText').textContent=content;
+ document.getElementById('fullscreenViewer').classList.remove('hidden');
+}
+
+function closeFullscreen(){
+ document.getElementById('fullscreenViewer').classList.add('hidden');
+}
+
 function render(){
  const nameInput=document.getElementById('recordName');
  if(nameInput&&document.activeElement!==nameInput)nameInput.value=data.name||'';
  const dateInput=document.getElementById('recordDate');
  const m=(data.name||'').match(/^(\d{4})[\/-](\d{2})[\/-](\d{2})/);
  if(m&&dateInput&&document.activeElement!==dateInput)dateInput.value=`${m[1]}-${m[2]}-${m[3]}`;
+
+ const dispInput=document.getElementById('displayTextInput');
+ if(dispInput&&document.activeElement!==dispInput)dispInput.value=data.displayText||'';
+ applyViewerStyle();
+ renderPresets();
 
  const ssHtml=`<button type="button" class="ss-tab ${isSsMode?'active':''}" id="ssTabBtn">SS</button>`;
  const seriesHtml=Array.from({length:6},(_,i)=>`<button type="button" class="${(!isSsMode&&i===activeSeries)?'active':''}" data-series="${i}">S${i+1}</button>`).join('');
@@ -590,6 +842,109 @@ document.getElementById('recordName').addEventListener('keydown',e=>{
   setRecordNameValue(e.target.value);
  }
 });
+
+document.getElementById('displayTextInput').addEventListener('input',e=>{
+ data.displayText=e.target.value;
+ persist();
+});
+
+document.getElementById('bgColorInput').addEventListener('input',e=>{
+ data.fsBgColor=normalizeHex(e.target.value,'#0f1d2d');
+ applyViewerStyle();
+ persist();
+});
+
+document.getElementById('textColorInput').addEventListener('input',e=>{
+ data.fsTextColor=normalizeHex(e.target.value,'#ffffff');
+ applyViewerStyle();
+ persist();
+});
+
+document.getElementById('fsBgColorInput').addEventListener('input',e=>{
+ data.fsBgColor=normalizeHex(e.target.value,'#0f1d2d');
+ applyViewerStyle();
+ persist();
+});
+
+document.getElementById('fsTextColorInput').addEventListener('input',e=>{
+ data.fsTextColor=normalizeHex(e.target.value,'#ffffff');
+ applyViewerStyle();
+ persist();
+});
+
+document.getElementById('fontSizeSlider').addEventListener('input',e=>{
+ data.fsFontSize=normalizeFontSize(e.target.value,44);
+ applyViewerStyle();
+ persist();
+});
+
+document.getElementById('fsFontSizeSlider').addEventListener('input',e=>{
+ data.fsFontSize=normalizeFontSize(e.target.value,44);
+ applyViewerStyle();
+ persist();
+});
+
+document.getElementById('fontSizeNumber').addEventListener('input',e=>{
+ const n=Number(e.target.value);
+ if(!Number.isFinite(n)||n<12)return;
+ data.fsFontSize=Math.round(n);
+ applyViewerStyle();
+ persist();
+});
+
+document.getElementById('fsFontSizeNumber').addEventListener('input',e=>{
+ const n=Number(e.target.value);
+ if(!Number.isFinite(n)||n<12)return;
+ data.fsFontSize=Math.round(n);
+ applyViewerStyle();
+ persist();
+});
+
+document.querySelectorAll('[data-theme]').forEach(btn=>{
+ btn.addEventListener('click',()=>{
+  const parts=(btn.dataset.theme||'').split('|');
+  data.fsBgColor=normalizeHex(parts[0],'#0f1d2d');
+  data.fsTextColor=normalizeHex(parts[1],'#ffffff');
+  applyViewerStyle();
+  persist();
+ });
+});
+
+document.getElementById('openFullscreenBtn').addEventListener('click',()=>{
+ const val=document.getElementById('displayTextInput').value;
+ data.displayText=val;
+ persist();
+ openFullscreenWithText(val);
+});
+
+document.getElementById('savePresetBtn').addEventListener('click',()=>{
+ const val=document.getElementById('displayTextInput').value.trim();
+ if(!val){alert('保存する定型文を入力してください。');return}
+ data.displayText=document.getElementById('displayTextInput').value;
+ if(!Array.isArray(data.presets))data.presets=[];
+ if(!data.presets.includes(val)){
+  data.presets.unshift(val);
+  data.presets=data.presets.slice(0,30);
+ }
+ persist();
+ renderPresets();
+});
+
+document.getElementById('clearDisplayTextBtn').addEventListener('click',()=>{
+ data.displayText='';
+ document.getElementById('displayTextInput').value='';
+ persist();
+});
+
+document.querySelectorAll('[data-fsalign]').forEach(b=>{
+ b.addEventListener('click',()=>{
+  data.fsAlign=b.dataset.fsalign;
+  applyViewerStyle();
+  persist();
+ });
+});
+
+document.getElementById('closeFullscreenBtn').addEventListener('click',closeFullscreen);
 
 document.getElementById('saveShot').addEventListener('click',()=>{
  const rawVal=document.getElementById('score').value.trim();
@@ -800,7 +1155,24 @@ document.getElementById('downloadImageBtn').addEventListener('click',triggerImag
 document.getElementById('prevShot').addEventListener('click',()=>{activeShot=Math.max(0,activeShot-1);pendingPoint=null;statusNotice='';render()});
 document.getElementById('nextShot').addEventListener('click',()=>{activeShot=Math.min(9,activeShot+1);pendingPoint=null;statusNotice='';render()});
 document.getElementById('clearShot').addEventListener('click',()=>{if(confirm('この発の得点と着弾位置を削除しますか？')){getActiveSlots()[activeShot]=null;persist();pendingPoint=null;statusNotice='';render()}});
-document.getElementById('newSession').addEventListener('click',()=>{if(confirm('現在の記録を消去して、新しい記録を開始しますか？ 先にバックアップをおすすめします。')){data=empty(data.name||'');shotCounter=0;activeSeries=0;isSsMode=true;activeShot=0;pendingPoint=null;statusNotice='';persist();render()}});
+document.getElementById('newSession').addEventListener('click',()=>{
+ if(confirm('現在の記録を消去して、新しい記録を開始しますか？ 先にバックアップをおすすめします。')){
+  const keepPresets=Array.isArray(data.presets)?[...data.presets]:[...DEFAULT_PRESETS];
+  const keepDisplayText=data.displayText||'';
+  const keepBg=data.fsBgColor||'#0f1d2d';
+  const keepFg=data.fsTextColor||'#ffffff';
+  const keepFz=data.fsFontSize||44;
+  const keepAl=data.fsAlign||'center';
+  data=empty(data.name||'');
+  data.presets=keepPresets;
+  data.displayText=keepDisplayText;
+  data.fsBgColor=keepBg;
+  data.fsTextColor=keepFg;
+  data.fsFontSize=keepFz;
+  data.fsAlign=keepAl;
+  shotCounter=0;activeSeries=0;isSsMode=true;activeShot=0;pendingPoint=null;statusNotice='';persist();render();
+ }
+});
 document.getElementById('exportData').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='br-score-backup.json';a.click();URL.revokeObjectURL(a.href)});
 document.getElementById('importButton').addEventListener('click',()=>document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.series)||x.series.length!==6||x.series.some(a=>!Array.isArray(a)||a.length!==10))throw Error();data=normalizeData(x);shotCounter=Math.max(shotCounter,computeMaxSeq(data));persist();render();alert('バックアップを復元しました。')}catch{alert('このファイルはBR Score Managerのバックアップではありません。')}e.target.value=''});
@@ -810,4 +1182,3 @@ render();
 </script>
 </body>
 </html>
-
