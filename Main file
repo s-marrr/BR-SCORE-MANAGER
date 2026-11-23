@@ -134,7 +134,7 @@ footer{max-width:1180px;margin:0 auto;padding:0 14px 24px;color:var(--muted);fon
       <div class="stats">
         <div class="stat"><small id="statTotalLabel">試射合計</small><strong id="seriesTotal">0.0</strong></div>
         <div class="stat"><small>入力済み</small><strong id="seriesCount">0/10</strong></div>
-        <div class="stat"><small>平均点</small><strong id="seriesAverage">--</strong></div>
+        <div class="stat"><small>平均点</small><strong id="seriesAverage">—</strong></div>
       </div>
     </section>
   </div>
@@ -455,7 +455,7 @@ function render(){
 
  const rec=current();
  document.getElementById('score').value=rec?.score??'';
- document.getElementById('shotButtons').innerHTML=slots.map((x,i)=>`<button type="button" class="shot ${i===activeShot?'selected':''}" data-shot="${i}"><b>${i+1}発目</b><span>${x?fmt(x.score):'--'}</span></button>`).join('');
+ document.getElementById('shotButtons').innerHTML=slots.map((x,i)=>`<button type="button" class="shot ${i===activeShot?'selected':''}" data-shot="${i}"><b>${i+1}発目</b><span>${x?fmt(x.score):'—'}</span></button>`).join('');
  document.querySelectorAll('[data-shot]').forEach(b=>b.onclick=()=>{
   activeShot=+b.dataset.shot;
   pendingPoint=null;
@@ -465,7 +465,7 @@ function render(){
 
  document.getElementById('seriesTotal').textContent=fmt(total(slots));
  document.getElementById('seriesCount').textContent=count(slots)+'/10';
- document.getElementById('seriesAverage').textContent=count(slots)?fmt(total(slots)/count(slots)):'--';
+ document.getElementById('seriesAverage').textContent=count(slots)?fmt(total(slots)/count(slots)):'—';
 
  renderMarkers();
  renderCoordStatus();
@@ -514,12 +514,12 @@ function renderSummary(){
  const ssArr=data.ss||[];
  const ssGroups={low:0,mid:0,high:0};
  ssArr.forEach(x=>{if(x){if(x.score>=10.5)ssGroups.high++;else if(x.score>=10)ssGroups.mid++;else ssGroups.low++}});
- const ssRow=`<tr><td><b>SS</b></td><td>${count(ssArr)}/10</td><td>${fmt(total(ssArr))}</td><td>${count(ssArr)?fmt(total(ssArr)/count(ssArr)):'--'}</td><td>9点台以下 ${ssGroups.low} · 10.0〜10.4 ${ssGroups.mid} · 10.5以上 ${ssGroups.high}</td></tr>`;
+ const ssRow=`<tr><td><b>SS</b></td><td>${count(ssArr)}/10</td><td>${fmt(total(ssArr))}</td><td>${count(ssArr)?fmt(total(ssArr)/count(ssArr)):'—'}</td><td>9点台以下 ${ssGroups.low} · 10.0〜10.4 ${ssGroups.mid} · 10.5以上 ${ssGroups.high}</td></tr>`;
 
  const rows=data.series.map((arr,i)=>{
   const groups={low:0,mid:0,high:0};
   arr.forEach(x=>{if(x){if(x.score>=10.5)groups.high++;else if(x.score>=10)groups.mid++;else groups.low++}});
-  return `<tr><td><b>S${i+1}</b></td><td>${count(arr)}/10</td><td>${fmt(total(arr))}</td><td>${count(arr)?fmt(total(arr)/count(arr)):'--'}</td><td>9点台以下 ${groups.low} · 10.0〜10.4 ${groups.mid} · 10.5以上 ${groups.high}</td></tr>`;
+  return `<tr><td><b>S${i+1}</b></td><td>${count(arr)}/10</td><td>${fmt(total(arr))}</td><td>${count(arr)?fmt(total(arr)/count(arr)):'—'}</td><td>9点台以下 ${groups.low} · 10.0〜10.4 ${groups.mid} · 10.5以上 ${groups.high}</td></tr>`;
  });
  document.getElementById('summaryRows').innerHTML=ssRow+rows.join('');
 }
@@ -636,7 +636,7 @@ function buildSummaryCanvas(){
  const titleText=data.name?`記録名：${data.name}`:'記録名：（未設定）';
  const allShots=data.series.flat().filter(x=>x&&Number.isFinite(x.score));
  const grandTotal=allShots.reduce((s,x)=>s+x.score,0);
- const grandAvg=allShots.length?fmt(grandTotal/allShots.length):'--';
+ const grandAvg=allShots.length?fmt(grandTotal/allShots.length):'—';
 
  ctx.fillStyle='#172536';
  ctx.font='bold 20px system-ui,-apple-system,"Segoe UI",sans-serif';
@@ -670,7 +670,7 @@ function buildSummaryCanvas(){
   ctx.font='17px system-ui,-apple-system,"Segoe UI",sans-serif';
   ctx.fillText(`${count(arr)}/10`,132,y);
   ctx.fillText(fmt(total(arr)),202,y);
-  ctx.fillText(count(arr)?fmt(total(arr)/count(arr)):'--',282,y);
+  ctx.fillText(count(arr)?fmt(total(arr)/count(arr)):'—',282,y);
   ctx.fillText(`${g.low} / ${g.mid} / ${g.high}`,360,y);
  });
 
